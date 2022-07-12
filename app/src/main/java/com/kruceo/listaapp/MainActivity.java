@@ -10,6 +10,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
@@ -37,11 +38,16 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     int local = 0;
-    String[] apps = {"iptv", "yukaline", "spotify","netflix", "youtube","mxplayer","amazon.avod"};
+    String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "com.spotify.tv.android","com.netflix.mediaclient", "com.google.android.youtube.tv", "com.disney.disneyplus", "amazon.avod"};
 
     List<Integer> pastCode = new ArrayList<>();
     private int codeIndex = 0;
-    private int[] settingsCode= {19,19,19,21,21,21,23};
+    private int[] settingsCode= {4,4,25,4,24,25,23};
+
+    List<Integer> pastCodehelp = new ArrayList<>();
+    private int helpIndex = 0;
+    private int[] settingsCodehelp= {10,10,11,14,11,10,7,7};
+
 
     List<ImageView> launcherApps = new ArrayList<>();
 
@@ -78,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         LinearLayout layout = findViewById(R.id.principal);
-        int iconWidth = 120;
+        int iconWidth = 100;
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         params.setMargins(50, 10, 0, 10);
         // setting the margin in the layout
@@ -135,10 +141,9 @@ public class MainActivity extends AppCompatActivity {
         double percentAvail = mi.availMem / (double)mi.totalMem * 100.0;
 
 
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(100, 100);
         launcherApps.get(local).setLayoutParams(paramsMax);
     }
-
 
 
         @RequiresApi(api = Build.VERSION_CODES.M)
@@ -168,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                 launcherApps.get(local).performClick();
             }
             LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
-            LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(120, 120);
+            LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(100, 100);
             paramsNormal.setMargins(50, 10, 0, 10);
             paramsMax.setMargins(50, 10, 0, 10);
 
@@ -198,13 +203,44 @@ public class MainActivity extends AppCompatActivity {
 
             if (codeIndex >= settingsCode.length) {
                 System.out.println("cheat completado");
-                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.android.tv.settings");
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.android.providers.settings");
                 if (launchIntent != null) {
                     startActivity(launchIntent);
                 }
                 codeIndex = 0;
                 pastCode.clear();
             }
+
+
+            //new cheat
+
+
+
+
+
+            pastCodehelp.add(code);
+
+            if (pastCodehelp.get(helpIndex) == settingsCodehelp[helpIndex]) {
+                System.out.println("cheat entry");
+                helpIndex++;
+            } else {
+                helpIndex = 0;
+                pastCodehelp.clear();
+            }
+
+
+
+
+            if (helpIndex >= settingsCodehelp.length) {
+                System.out.println("cheat completado");
+                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.anydesk.anydeskandroid");
+                if (launchIntent != null) {
+                    startActivity(launchIntent);
+                }
+                helpIndex = 0;
+                pastCodehelp.clear();
+            }
+
 
             return true;
         }
