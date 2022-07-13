@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
         for(int i = 0; i < pidsTask.size(); i++) {
             uidList.add(pidsTask.get(i).uid);
             System.out.println(uidList.get(i));
-    }
+        }
         for(int b = 0; b < uidList.size(); b++)
         {
             Runtime.getRuntime().exec ("sh -c su -c kill "+uidList.get(b));
@@ -88,10 +88,10 @@ public class MainActivity extends AppCompatActivity {
                     ImageView newImage = new ImageView(this);
                     try {
                         Resources resources = pm.getResourcesForApplication(packageInfo);
-                    Drawable icon = resources.getDrawableForDensity(packageInfo.icon, DisplayMetrics.DENSITY_XXXHIGH);
-                    newImage.setImageDrawable(icon);
-                    newImage.setLayoutParams(params);
-                    layout.addView(newImage);
+                        Drawable icon = resources.getDrawableForDensity(packageInfo.icon, DisplayMetrics.DENSITY_XXXHIGH);
+                        newImage.setImageDrawable(icon);
+                        newImage.setLayoutParams(params);
+                        layout.addView(newImage);
                     }
                     catch (Error | PackageManager.NameNotFoundException error){}
 
@@ -144,117 +144,117 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-        @RequiresApi(api = Build.VERSION_CODES.M)
-        @Override
-        public boolean onKeyUp(int keyCode, KeyEvent event) {
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
 
-            int code = event.getKeyCode();
-            if (code == 8) {
+        int code = event.getKeyCode();
+        if (code == 8) {
 
-                try {
-                    killProcesses();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }
-
-            if (code == 22 && local < launcherApps.size() - 1) {
-
-                local++;
-
-            }
-            if (code == 21 && local > 0) {
-                local--;
-            }
-            if (code == 23) {
-                launcherApps.get(local).performClick();
-            }
-            LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
-            LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(100, 100);
-            paramsNormal.setMargins(50, 10, 0, 10);
-            paramsMax.setMargins(50, 10, 0, 10);
-
-            for (int i = 0; i < launcherApps.size(); i++) {
-                launcherApps.get(i).setLayoutParams(paramsNormal);
-            }
-            launcherApps.get(local).setLayoutParams(paramsMax);
-
-
-            System.out.println(code + " - " + local);
-
-
-            //---------------------------------------------------------------------------
-
-            pastCode.add(code);
-
-            if (pastCode.get(codeIndex) == settingsCode[codeIndex]) {
-                System.out.println("cheat entry");
-                codeIndex++;
-            } else {
-                codeIndex = 0;
-                pastCode.clear();
-            }
-
-
-
-
-            if (codeIndex >= settingsCode.length) {
-                System.out.println("cheat completado");
-                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.android.providers.settings");
-                if (launchIntent != null) {
-                    startActivity(launchIntent);
-                }
-                codeIndex = 0;
-                pastCode.clear();
-            }
-
-
-            //new cheat
-
-
-
-
-
-            pastCodehelp.add(code);
-
-            if (pastCodehelp.get(helpIndex) == settingsCodehelp[helpIndex]) {
-                System.out.println("cheat entry");
-                helpIndex++;
-            } else {
-                helpIndex = 0;
-                pastCodehelp.clear();
-            }
-
-
-
-
-            if (helpIndex >= settingsCodehelp.length) {
-                System.out.println("cheat completado");
-                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.anydesk.anydeskandroid");
-                if (launchIntent != null) {
-                    startActivity(launchIntent);
-                }
-                helpIndex = 0;
-                pastCodehelp.clear();
-            }
-
-
-            return true;
-        }
-
-        public String getVersion(String packageName)
-        {
-            String versionName = "";
             try {
-                versionName = getPackageManager().getPackageInfo(packageName, 0).versionName;
-                System.out.println(versionName);
-            } catch (PackageManager.NameNotFoundException e) {
+                killProcesses();
+            } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            return versionName;
+        }
+
+        if (code == 22 && local < launcherApps.size() - 1) {
+
+            local++;
 
         }
+        if (code == 21 && local > 0) {
+            local--;
+        }
+        if (code == 23) {
+            launcherApps.get(local).performClick();
+        }
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
+        LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(100, 100);
+        paramsNormal.setMargins(50, 10, 0, 10);
+        paramsMax.setMargins(50, 10, 0, 10);
+
+        for (int i = 0; i < launcherApps.size(); i++) {
+            launcherApps.get(i).setLayoutParams(paramsNormal);
+        }
+        launcherApps.get(local).setLayoutParams(paramsMax);
+
+
+        System.out.println(code + " - " + local);
+
+
+        //---------------------------------------------------------------------------
+
+        pastCode.add(code);
+
+        if (pastCode.get(codeIndex) == settingsCode[codeIndex]) {
+            System.out.println("cheat entry");
+            codeIndex++;
+        } else {
+            codeIndex = 0;
+            pastCode.clear();
+        }
+
+
+
+
+        if (codeIndex >= settingsCode.length) {
+            System.out.println("cheat completado");
+            Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.android.tv.settings");
+            if (launchIntent != null) {
+                startActivity(launchIntent);
+            }
+            codeIndex = 0;
+            pastCode.clear();
+        }
+
+
+        //new cheat
+
+
+
+
+
+        pastCodehelp.add(code);
+
+        if (pastCodehelp.get(helpIndex) == settingsCodehelp[helpIndex]) {
+            System.out.println("cheat entry");
+            helpIndex++;
+        } else {
+            helpIndex = 0;
+            pastCodehelp.clear();
+        }
+
+
+
+
+        if (helpIndex >= settingsCodehelp.length) {
+            System.out.println("cheat completado");
+            Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.anydesk.anydeskandroid");
+            if (launchIntent != null) {
+                startActivity(launchIntent);
+            }
+            helpIndex = 0;
+            pastCodehelp.clear();
+        }
+
+
+        return true;
     }
+
+    public String getVersion(String packageName)
+    {
+        String versionName = "";
+        try {
+            versionName = getPackageManager().getPackageInfo(packageName, 0).versionName;
+            System.out.println(versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return versionName;
+
+    }
+}
 
