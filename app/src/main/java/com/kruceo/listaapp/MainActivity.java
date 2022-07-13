@@ -10,31 +10,18 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Process;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.io.IOException;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     int local = 0;
@@ -71,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,8 +66,7 @@ public class MainActivity extends AppCompatActivity {
         PackageManager pm = getPackageManager();
 
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-
-//----------------------------//
+        PackageManager manager = this.getPackageManager();
 
 
 
@@ -90,8 +77,12 @@ public class MainActivity extends AppCompatActivity {
         // setting the margin in the layout
         // adding the image in the layout
 
+
+
+
         for (int i = 0; i < apps.length; i++) {
             for (ApplicationInfo packageInfo : packages) {
+                getVersion(packageInfo.packageName);
                 if (packageInfo.packageName.contains(apps[i])) {
                     System.out.println("created " + packageInfo.name);
                     ImageView newImage = new ImageView(this);
@@ -104,7 +95,11 @@ public class MainActivity extends AppCompatActivity {
                     }
                     catch (Error | PackageManager.NameNotFoundException error){}
 
+                    System.out.println("ss");
                     launcherApps.add(newImage);
+
+
+
 
                     newImage.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -114,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
                             if (launchIntent != null) {
                                 startActivity(launchIntent);
                                 System.out.println("------> " + launchIntent.getPackage());
+
                             }
                         }
 
@@ -137,12 +133,14 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        System.out.println(availableMegs);
+        System.out.println("memoria usada: " + availableMegs + "MB");
         double percentAvail = mi.availMem / (double)mi.totalMem * 100.0;
 
 
         LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(100, 100);
         launcherApps.get(local).setLayoutParams(paramsMax);
+
+
     }
 
 
@@ -245,5 +243,18 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
+        public String getVersion(String packageName)
+        {
+            String versionName = "";
+            try {
+                versionName = getPackageManager().getPackageInfo(packageName, 0).versionName;
+                System.out.println(versionName);
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+
+            return versionName;
+
+        }
     }
 
