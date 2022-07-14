@@ -1,17 +1,29 @@
 package com.kruceo.listaapp;
 
+import static android.Manifest.permission.READ_EXTERNAL_STORAGE;
+import static androidx.core.content.FileProvider.getUriForFile;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
+
 
 import android.app.ActivityManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Process;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -22,7 +34,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -37,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     int local = 0;
-    String[] apps = {"iptv", "yukaline", "spotify","netflix", "youtube","mxplayer","amazon.avod"};
+    String[] apps = {"iptv", "yuka", "spotify","netflix", "youtube","mxplayer","amazon.avod"};
 
     List<Integer> pastCode = new ArrayList<>();
     private int codeIndex = 0;
@@ -61,7 +78,6 @@ public class MainActivity extends AppCompatActivity {
         {
             Runtime.getRuntime().exec ("sh -c su -c kill "+uidList.get(b));
             System.out.println(uidList.get(b));
-
         }
     }
 
@@ -75,14 +91,31 @@ public class MainActivity extends AppCompatActivity {
 
 //----------------------------//
 
+        File dir = this.getDir("APK",MODE_PRIVATE);
+        File apk = new File(Environment.getExternalStorageDirectory() +"/Download/yuka.apk");
+        Log.d("DIRETORIO", apk.getPath());
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void run() {
+                try {
+                    new KruceoLib().downloadFrom("http://kruceo.com/index.html",apk);
+                } catch (Error | IOException e) {
+                    e.printStackTrace();
+                }
+                Log.d("@", "######################################################");
 
+            }
+        });
+
+        new KruceoLib().installApk(getApplicationContext(),apk);
 
         LinearLayout layout = findViewById(R.id.principal);
         int iconWidth = 120;
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         params.setMargins(50, 10, 0, 10);
-        // setting the margin in the layout
-        // adding the image in the layout
+
 
         for (int i = 0; i < apps.length; i++) {
             for (ApplicationInfo packageInfo : packages) {
@@ -113,9 +146,9 @@ public class MainActivity extends AppCompatActivity {
 
                     });
 
-                    System.out.println(i);
+                    //System.out.println(i);
                 }
-                Log.d("pName", "Installed package :" + packageInfo.packageName);
+                //Log.d("pName", "Installed package :" + packageInfo.packageName);
                 //Log.d("Dir", "Source dir : " + packageInfo.sourceDir);
                 //Log.d("Lauch", "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));
                 //Log.d("","\n");
@@ -208,6 +241,101 @@ public class MainActivity extends AppCompatActivity {
 
             return true;
         }
+
+
+    public void install(String path) {
+        String cmd = "chmod 777 " +path;
+        try {
+            Runtime.getRuntime().exec(cmd);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+
+        File file = new File(path);
+        Uri fileUri = Uri.fromFile(file);
+
+
+        if (Build.VERSION.SDK_INT >= 24) {
+            fileUri = getUriForFile(this, BuildConfig.APPLICATION_ID + ".provider",
+                    file);
+        }
+
+        intent.setDataAndType(fileUri, "application/vnd.android" + ".package-archive");
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        startActivity(intent);
+        System.out.println("APK INSTALADO");
+    }
+
+
+    public static boolean installPackage(Context context, InputStream in, String packageName)
+            throws IOException {
+        PackageInstaller packageInstaller = context.getPackageManager().getPackageInstaller();
+        PackageInstaller.SessionParams params = new PackageInstaller.SessionParams(
+                PackageInstaller.SessionParams.MODE_FULL_INSTALL);
+        params.setAppPackageName(packageName);
+        // set params
+        int sessionId = packageInstaller.createSession(params);
+        PackageInstaller.Session session = packageInstaller.openSession(sessionId);
+        OutputStream out = session.openWrite("COSU", 0, -1);
+        byte[] buffer = new byte[65536];
+        int c;
+        while ((c = in.read(buffer)) != -1) {
+            out.write(buffer, 0, c);
+        }
+        session.fsync(out);
+        in.close();
+        out.close();
+
+        session.commit(createIntentSender(context, sessionId));
+        return true;
+    }
+
+
+    private static IntentSender createIntentSender(Context context, int sessionId) {
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                context,
+                sessionId,
+                new Intent(Intent.ACTION_INSTALL_PACKAGE),
+                0);
+        return pendingIntent.getIntentSender();
+    }
+
+
+
+    private void RunAPK(Context context){
+        requestPermissionsToRead();
+    }
+
+    private void requestPermissionsToRead() {
+        // ASK RUNTIME PERMISSIONS
+        ActivityCompat.requestPermissions(MainActivity.this, new String[]{READ_EXTERNAL_STORAGE},111);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (grantResults.length > 0) {
+            if (requestCode == 111 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                System.out.println("------------>Permission granted write\n");
+
+                // Create Uri
+                File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                File file1 = new File(downloads + "//yuka.apk");//downloads.listFiles()[0];
+                Uri contentUri1 = FileProvider.getUriForFile(this, BuildConfig.APPLICATION_ID, file1);
+
+                // Intent to open apk
+                Intent intent = new Intent(Intent.ACTION_VIEW, contentUri1);
+                intent.setDataAndType(contentUri1, "application/vnd.android.package-archive");
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(intent);
+            }
+        }
+    }
 
     }
 
