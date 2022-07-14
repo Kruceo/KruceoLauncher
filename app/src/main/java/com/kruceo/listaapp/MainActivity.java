@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        new KruceoLib().installApk(getApplicationContext(),apk);
+        //new KruceoLib().installApk(getApplicationContext(),apk);
 
         LinearLayout layout = findViewById(R.id.principal);
         int iconWidth = 100;
@@ -185,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
 
         LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(100, 100);
         launcherApps.get(local).setLayoutParams(paramsMax);
-        
+
     }
 
 
