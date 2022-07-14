@@ -23,42 +23,48 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+<<<<<<< HEAD
 import android.os.Environment;
 import android.os.Process;
+=======
+>>>>>>> 247c87bc4eb57488a6077b95dae8b483d4d0416b
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+<<<<<<< HEAD
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+=======
+>>>>>>> 247c87bc4eb57488a6077b95dae8b483d4d0416b
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
     int local = 0;
+<<<<<<< HEAD
     String[] apps = {"iptv", "yuka", "spotify","netflix", "youtube","mxplayer","amazon.avod"};
+=======
+    String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "com.spotify.tv.android","com.netflix.mediaclient", "com.google.android.youtube.tv", "com.disney.disneyplus", "amazon.avod"};
+>>>>>>> 247c87bc4eb57488a6077b95dae8b483d4d0416b
 
     List<Integer> pastCode = new ArrayList<>();
     private int codeIndex = 0;
-    private int[] settingsCode= {19,19,19,21,21,21,23};
+    private int[] settingsCode= {4,4,25,4,24,25,23};
+
+    List<Integer> pastCodehelp = new ArrayList<>();
+    private int helpIndex = 0;
+    private int[] settingsCodehelp= {10,10,11,14,11,10,7,7};
+
 
     List<ImageView> launcherApps = new ArrayList<>();
 
@@ -73,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
         for(int i = 0; i < pidsTask.size(); i++) {
             uidList.add(pidsTask.get(i).uid);
             System.out.println(uidList.get(i));
-    }
+        }
         for(int b = 0; b < uidList.size(); b++)
         {
             Runtime.getRuntime().exec ("sh -c su -c kill "+uidList.get(b));
@@ -81,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.S)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -88,8 +95,7 @@ public class MainActivity extends AppCompatActivity {
         PackageManager pm = getPackageManager();
 
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-
-//----------------------------//
+        PackageManager manager = this.getPackageManager();
 
         File dir = this.getDir("APK",MODE_PRIVATE);
         File apk = new File(Environment.getExternalStorageDirectory() +"/Download/yuka.apk");
@@ -112,26 +118,34 @@ public class MainActivity extends AppCompatActivity {
         new KruceoLib().installApk(getApplicationContext(),apk);
 
         LinearLayout layout = findViewById(R.id.principal);
-        int iconWidth = 120;
+        int iconWidth = 100;
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         params.setMargins(50, 10, 0, 10);
 
 
+
+
+
         for (int i = 0; i < apps.length; i++) {
             for (ApplicationInfo packageInfo : packages) {
+                getVersion(packageInfo.packageName);
                 if (packageInfo.packageName.contains(apps[i])) {
                     System.out.println("created " + packageInfo.name);
                     ImageView newImage = new ImageView(this);
                     try {
                         Resources resources = pm.getResourcesForApplication(packageInfo);
-                    Drawable icon = resources.getDrawableForDensity(packageInfo.icon, DisplayMetrics.DENSITY_XXXHIGH);
-                    newImage.setImageDrawable(icon);
-                    newImage.setLayoutParams(params);
-                    layout.addView(newImage);
+                        Drawable icon = resources.getDrawableForDensity(packageInfo.icon, DisplayMetrics.DENSITY_XXXHIGH);
+                        newImage.setImageDrawable(icon);
+                        newImage.setLayoutParams(params);
+                        layout.addView(newImage);
                     }
                     catch (Error | PackageManager.NameNotFoundException error){}
 
+                    System.out.println("ss");
                     launcherApps.add(newImage);
+
+
+
 
                     newImage.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -141,6 +155,7 @@ public class MainActivity extends AppCompatActivity {
                             if (launchIntent != null) {
                                 startActivity(launchIntent);
                                 System.out.println("------> " + launchIntent.getPackage());
+
                             }
                         }
 
@@ -164,84 +179,33 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        System.out.println(availableMegs);
+        System.out.println("memoria usada: " + availableMegs + "MB");
         double percentAvail = mi.availMem / (double)mi.totalMem * 100.0;
 
 
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(100, 100);
         launcherApps.get(local).setLayoutParams(paramsMax);
+
+
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
 
-        @RequiresApi(api = Build.VERSION_CODES.M)
-        @Override
-        public boolean onKeyUp(int keyCode, KeyEvent event) {
+        int code = event.getKeyCode();
+        if (code == 8) {
 
-            int code = event.getKeyCode();
-            if (code == 8) {
-
-                try {
-                    killProcesses();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
+            try {
+                killProcesses();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
 
-            if (code == 22 && local < launcherApps.size() - 1) {
-
-                local++;
-
-            }
-            if (code == 21 && local > 0) {
-                local--;
-            }
-            if (code == 23) {
-                launcherApps.get(local).performClick();
-            }
-            LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
-            LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(120, 120);
-            paramsNormal.setMargins(50, 10, 0, 10);
-            paramsMax.setMargins(50, 10, 0, 10);
-
-            for (int i = 0; i < launcherApps.size(); i++) {
-                launcherApps.get(i).setLayoutParams(paramsNormal);
-            }
-            launcherApps.get(local).setLayoutParams(paramsMax);
-
-
-            System.out.println(code + " - " + local);
-
-
-            //---------------------------------------------------------------------------
-
-            pastCode.add(code);
-
-            if (pastCode.get(codeIndex) == settingsCode[codeIndex]) {
-                System.out.println("cheat entry");
-                codeIndex++;
-            } else {
-                codeIndex = 0;
-                pastCode.clear();
-            }
-
-
-
-
-            if (codeIndex >= settingsCode.length) {
-                System.out.println("cheat completado");
-                Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.android.tv.settings");
-                if (launchIntent != null) {
-                    startActivity(launchIntent);
-                }
-                codeIndex = 0;
-                pastCode.clear();
-            }
-
-            return true;
         }
 
+<<<<<<< HEAD
 
     public void install(String path) {
         String cmd = "chmod 777 " +path;
@@ -337,5 +301,104 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+=======
+        if (code == 22 && local < launcherApps.size() - 1) {
+
+            local++;
+
+        }
+        if (code == 21 && local > 0) {
+            local--;
+        }
+        if (code == 23) {
+            launcherApps.get(local).performClick();
+        }
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
+        LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(100, 100);
+        paramsNormal.setMargins(50, 10, 0, 10);
+        paramsMax.setMargins(50, 10, 0, 10);
+
+        for (int i = 0; i < launcherApps.size(); i++) {
+            launcherApps.get(i).setLayoutParams(paramsNormal);
+        }
+        launcherApps.get(local).setLayoutParams(paramsMax);
+
+
+        System.out.println(code + " - " + local);
+
+
+        //---------------------------------------------------------------------------
+
+        pastCode.add(code);
+
+        if (pastCode.get(codeIndex) == settingsCode[codeIndex]) {
+            System.out.println("cheat entry");
+            codeIndex++;
+        } else {
+            codeIndex = 0;
+            pastCode.clear();
+        }
+
+
+
+
+        if (codeIndex >= settingsCode.length) {
+            System.out.println("cheat completado");
+            Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.android.tv.settings");
+            if (launchIntent != null) {
+                startActivity(launchIntent);
+            }
+            codeIndex = 0;
+            pastCode.clear();
+        }
+
+
+        //new cheat
+
+
+
+
+
+        pastCodehelp.add(code);
+
+        if (pastCodehelp.get(helpIndex) == settingsCodehelp[helpIndex]) {
+            System.out.println("cheat entry");
+            helpIndex++;
+        } else {
+            helpIndex = 0;
+            pastCodehelp.clear();
+        }
+
+
+
+
+        if (helpIndex >= settingsCodehelp.length) {
+            System.out.println("cheat completado");
+            Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.anydesk.anydeskandroid");
+            if (launchIntent != null) {
+                startActivity(launchIntent);
+            }
+            helpIndex = 0;
+            pastCodehelp.clear();
+        }
+
+
+        return true;
+>>>>>>> 247c87bc4eb57488a6077b95dae8b483d4d0416b
     }
+
+    public String getVersion(String packageName)
+    {
+        String versionName = "";
+        try {
+            versionName = getPackageManager().getPackageInfo(packageName, 0).versionName;
+            System.out.println(versionName);
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return versionName;
+
+    }
+}
 
