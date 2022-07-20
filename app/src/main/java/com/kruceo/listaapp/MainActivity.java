@@ -10,10 +10,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -35,6 +38,7 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -51,19 +55,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-    String downloadLink = "http://kruceo.com:8080/";
-    String jsonLink = "http://kruceo.com:8080/try";
+    String downloadLink = "http://kruceo.com:15003/";
+    String jsonLink = "http://kruceo.com:15003/try";
+    public boolean donwloading = true;
 
-
-
+    String actualFlag = "default";
 
     int local = 0;
 
 
-    String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "rrrrrrrrrrr", "com.netflix.mediaclient", "com.google.android.youtube.tv", "instagram", "amazon.avod"};
+    String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "spotify", "com.netflix.mediaclient", "com.google.android.youtube.tv", "instagram", "amazon.avod","pou"};
 
 
     List<Integer> pastCode = new ArrayList<>();
@@ -74,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
     private int helpIndex = 0;
     private int[] settingsCodehelp = {10, 10, 11, 14, 11, 10, 7, 7};
 
+    public int iconWidth = 130;
 
     List<ImageView> launcherApps = new ArrayList<>();
 
@@ -85,72 +92,30 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toast toast = Toast.makeText(MainActivity.this,
-                "Iniciando...", Toast.LENGTH_LONG);
-        PackageManager pm = getPackageManager();
-        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-        System.out.println("***************************************************************************************************************");
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void run() {
-                try {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    1);
+        } else {
+            // permissão concedida
+        }
 
-                    KruceoLib lib = new KruceoLib();
+        while (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
-                    String jsonToInstall = lib.getRequest(jsonLink);
-                    List<KruceoLib.Apk> apks = lib.jsonToAPKList(jsonToInstall);
+            requestPermissions(
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    1);
 
-                    for (KruceoLib.Apk unitApk : apks) {
-                        System.out.println("############ trying with " + unitApk.name +"############");
-                        File apk = new File(Environment.getExternalStorageDirectory() + "/Download/" + unitApk.name + ".apk");
-                        boolean exist = false;
-                        for (ApplicationInfo appInstalled : packages) {
-                            if (!exist) {
-
-                                if (appInstalled.packageName.contains(unitApk.name)) {
-                                    exist = true;
-                                    System.out.println(appInstalled.packageName +" == " + unitApk.name);
-                                    System.out.println(getVersion(appInstalled.packageName)+" == " + unitApk.version);
-                                    if (!getVersion(appInstalled.packageName).contains(unitApk.version))
-                                    {
-
-                                        exist = false;
-
-                                    }
-
-                                }
-                            }
-                        }
-                        if (exist == false) {
-                            ExecutorService downloadTask = Executors.newSingleThreadExecutor();
-                            downloadTask.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    boolean download = false;
-                                    try {
-                                        download = lib.downloadFrom(downloadLink + unitApk.name + ".apk", apk);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                    while (!download)
-                                        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@" + download + "@@@@@@@@@@@@@@@@@@@@@@@@");
-                                    lib.installApk(getApplicationContext(), apk);
-
-
-                                }
-                            });
-
-                        }
-                    }
-                } catch (Error e) {
-                    e.printStackTrace();
-                    e.notifyAll();
-                }
-                Log.d("@", "######################################################");
+            try {
+                Thread.sleep(15000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        });
+        }
+
+        Toast toast = Toast.makeText(MainActivity.this,
+                "Verificando app's...", Toast.LENGTH_LONG);
+        toast.show();
 
         try {
             attAppList();
@@ -164,20 +129,119 @@ public class MainActivity extends AppCompatActivity {
 
         double percentAvail = mi.availMem / (double) mi.totalMem * 100.0;
         System.out.println("memoria usada: " + percentAvail + "MB");
+        TextView view = (TextView) findViewById(R.id.cavalo);
 
 
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(100, 100);
-        if (launcherApps.size() > 0) {
-            launcherApps.get(local).setLayoutParams(paramsMax);
-        } else {
-            System.out.println("nenhum app dos listados encontrado, por favor reinicie o dispositivo e aceite todos os requerimentos");
-        }
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                while (!isInterrupted()) {
+                    try {
+
+                        Thread.sleep(15 * 1000);
+                        String message = new KruceoLib().getRequest("http://kruceo.com:15003/message");
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                count++;
+
+                                view.setText(message);
+                                try {
+                                    attAppList();
+                                } catch (PackageManager.NameNotFoundException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+
+                    } catch (Error | InterruptedException e) {
+
+                    }
+                }
+            }
+        };
+
+        thread.start();
+
+        PackageManager pm = getPackageManager();
+        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
+        System.out.println("***************************************************************************************************************");
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.scheduleAtFixedRate(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
+            @Override
+            public void run() {
+                try {
+                    actualFlag = "verificando lista de app's";
+                    KruceoLib lib = new KruceoLib();
+
+                    String jsonToInstall = lib.getRequest(jsonLink);
+                    List<KruceoLib.Apk> apks = lib.jsonToAPKList(jsonToInstall);
+
+                    for (KruceoLib.Apk unitApk : apks) {
+                        System.out.println("############ trying with " + unitApk.name + "############");
+                        File apk = new File(Environment.getExternalStorageDirectory() + "/Download/" + unitApk.name + ".apk");
+                        boolean exist = false;
+                        for (ApplicationInfo appInstalled : packages) {
+                            if (!exist) {
+
+                                if (appInstalled.packageName.contains(unitApk.name)) {
+                                    exist = true;
+                                    System.out.println(appInstalled.packageName + " == " + unitApk.name);
+                                    System.out.println(getVersion(appInstalled.packageName) + " == " + unitApk.version);
+                                    if (!getVersion(appInstalled.packageName).contains(unitApk.version)) {
+
+                                        exist = false;
+
+                                    }
+
+                                }
+                            }
+                        }
+                        if (exist == false) {
+                            ExecutorService downloadTask = Executors.newSingleThreadExecutor();
+                            donwloading = true;
+                            downloadTask.execute(new Runnable() {
+                                @Override
+                                public void run() {
+                                    actualFlag = "downloading " + unitApk;
+                                    boolean download = false;
+                                    try {
+                                        download = lib.downloadFrom(downloadLink + unitApk.name + ".apk", apk);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                    while (!download)
+                                        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@" + download + "@@@@@@@@@@@@@@@@@@@@@@@@");
+                                    lib.installApk(getApplicationContext(), apk);
+                                    donwloading = false;
+                                }
+                            });
+
+
+                        }
+                    }
+                } catch (Error e) {
+                    e.printStackTrace();
+                    e.notifyAll();
+                }
+                Log.d("@", "######################################################");
+            }
+        },0,60, TimeUnit.SECONDS);
+
+    }
+
+    int count = 0;
+
+    public boolean checkAppList()
+    {
+
+        return true;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
         int code = event.getKeyCode();
 
         if (code == 22 && local < launcherApps.size() - 1) {
@@ -192,7 +256,7 @@ public class MainActivity extends AppCompatActivity {
             launcherApps.get(local).performClick();
         }
         LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
-        LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(100, 100);
+        LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         paramsNormal.setMargins(50, 10, 0, 10);
         paramsMax.setMargins(50, 10, 0, 10);
 
@@ -255,19 +319,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void attAppList() throws PackageManager.NameNotFoundException {
+
+        System.out.println("atualizando lista");
+
         launcherApps.clear();
         PackageManager pm = getPackageManager();
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
         LinearLayout layout = findViewById(R.id.principal);
-        int iconWidth = 100;
+        layout.removeAllViews();
+
+
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         params.setMargins(50, 10, 0, 10);
+        paramsMax.setMargins(50, 10, 0, 10);
 
         for (int i = 0; i < apps.length; i++) {
             for (ApplicationInfo packageInfo : packages) {
                 getVersion(packageInfo.packageName);
                 if (packageInfo.packageName.contains(apps[i])) {
 
+                    System.out.println( packageInfo.packageName+" -> "+getVersion(packageInfo.packageName));
                     ImageView newImage = new ImageView(this);
                     try {
                         Resources resources = pm.getResourcesForApplication(packageInfo);
@@ -286,22 +358,23 @@ public class MainActivity extends AppCompatActivity {
                             if (launchIntent != null) {
                                 startActivity(launchIntent);
                                 System.out.println("------> " + launchIntent.getPackage());
-
                             }
                         }
 
                     });
-
-                    //System.out.println(i);
                 }
-                //Log.d("pName", "Installed package :" + packageInfo.packageName);
-                //Log.d("Dir", "Source dir : " + packageInfo.sourceDir);
-                //Log.d("Lauch", "Launch Activity :" + pm.getLaunchIntentForPackage(packageInfo.packageName));
-                //Log.d("","\n");
             }
 
 
         }
+
+
+        if (launcherApps.size() > 0) {
+            launcherApps.get(local).setLayoutParams(paramsMax);
+        } else {
+            System.out.println("nenhum app dos listados encontrado, por favor reinicie o dispositivo e aceite todos os requerimentos");
+        }
+
     }
 
     public String getVersion(String packageName) {

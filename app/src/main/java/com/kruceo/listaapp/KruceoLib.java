@@ -98,8 +98,6 @@ public class KruceoLib {
             jsonName = (apkSplited[0].split(":")[1].replace("}]", ""));
             jsonVersion = (apkSplited[1].split(":")[1].replace("}]", ""));
 
-            System.out.println(jsonName + "\n" + jsonVersion);
-            System.out.println("----------------");
             Apk newApk = new Apk(jsonName, jsonVersion);
             apkFreshList.add(newApk);
         }
