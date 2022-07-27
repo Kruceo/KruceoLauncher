@@ -23,10 +23,10 @@
             android:id="@+id/cavalo"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="1:25 PM"
+            android:layout_weight="2"
+            android:text="Checking..."
             android:textColor="#FFFFFF"
-            android:textSize="50dp"></TextView>
+            android:textSize="130px"></TextView>
 
         <DigitalClock
             android:layout_width="wrap_content"
@@ -36,10 +36,11 @@
             android:gravity="right"
 
             android:textColor="@color/white"
-            android:textSize="50dp">
+            android:textSize="130px">
 
 
         </DigitalClock>
+
 
 
     </LinearLayout>

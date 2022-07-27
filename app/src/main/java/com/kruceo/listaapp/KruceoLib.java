@@ -33,10 +33,11 @@ public class KruceoLib {
             return response.body().string();
         } catch (Error | IOException error) {
             error.printStackTrace();
+            return "Erro - " + url;
         }
 
 
-        return "Não conseguiu uma resposta dessa URL - " + url;
+
     }
 
 

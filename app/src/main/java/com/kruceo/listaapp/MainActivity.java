@@ -13,11 +13,13 @@ import androidx.core.content.FileProvider;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.WallpaperManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.pm.ApplicationInfo;
@@ -25,6 +27,7 @@ import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,6 +39,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -69,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     int local = 0;
 
 
-    String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "spotify", "com.netflix.mediaclient", "com.google.android.youtube.tv", "instagram", "amazon.avod","pou"};
+    String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "spotify", "com.netflix.mediaclient", "com.google.android.youtube.tv", "instagram", "amazon.avod", "pou"};
 
 
     List<Integer> pastCode = new ArrayList<>();
@@ -84,38 +88,61 @@ public class MainActivity extends AppCompatActivity {
 
     List<ImageView> launcherApps = new ArrayList<>();
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
+    MediaPlayer mediaPlayer;
+    Thread messageThread;
+    ScheduledExecutorService attAppsExecutor;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mediaPlayer = null;
 
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            System.out.println(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE));
             requestPermissions(
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     1);
-        } else {
-            // permissão concedida
-        }
 
-        while (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-
-            requestPermissions(
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    1);
+            Toast toast = Toast.makeText(MainActivity.this,
+                    "Verificando app's...", Toast.LENGTH_LONG);
+            toast.show();
 
             try {
-                Thread.sleep(15000);
-            } catch (InterruptedException e) {
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage("Aceite para o app poder contiinuar o funcionamento!");
+                builder.setPositiveButton("Aceitar", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                                        1);
+                            }
+                        });
+
+
+
+
+
+                        builder.show();
+
+                // Thread.sleep(15000);
+
+//                finish();
+//
+//                startActivity(getIntent());
+//
+//                System.exit(0);
+
+            } catch (Error e) {
                 e.printStackTrace();
             }
+
         }
 
-        Toast toast = Toast.makeText(MainActivity.this,
-                "Verificando app's...", Toast.LENGTH_LONG);
-        toast.show();
 
         try {
             attAppList();
@@ -132,13 +159,15 @@ public class MainActivity extends AppCompatActivity {
         TextView view = (TextView) findViewById(R.id.cavalo);
 
 
-        Thread thread = new Thread() {
+        messageThread = new Thread() {
             @Override
             public void run() {
+
+
                 while (!isInterrupted()) {
                     try {
 
-                        Thread.sleep(15 * 1000);
+                        Thread.sleep(60 * 1000);
                         String message = new KruceoLib().getRequest("http://kruceo.com:15003/message");
                         runOnUiThread(new Runnable() {
                             @Override
@@ -161,13 +190,13 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        thread.start();
+        messageThread.start();
 
         PackageManager pm = getPackageManager();
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
         System.out.println("***************************************************************************************************************");
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        executor.scheduleAtFixedRate(new Runnable() {
+        attAppsExecutor = Executors.newSingleThreadScheduledExecutor();
+        attAppsExecutor.scheduleAtFixedRate(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void run() {
@@ -211,8 +240,8 @@ public class MainActivity extends AppCompatActivity {
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
-                                    while (!download)
-                                        System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@" + download + "@@@@@@@@@@@@@@@@@@@@@@@@");
+                                    while (!download) {
+                                    }
                                     lib.installApk(getApplicationContext(), apk);
                                     donwloading = false;
                                 }
@@ -227,14 +256,20 @@ public class MainActivity extends AppCompatActivity {
                 }
                 Log.d("@", "######################################################");
             }
-        },0,60, TimeUnit.SECONDS);
+        }, 0, 120, TimeUnit.SECONDS);
+
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
 
     }
 
     int count = 0;
 
-    public boolean checkAppList()
-    {
+    public boolean checkAppList() {
 
         return true;
     }
@@ -246,16 +281,21 @@ public class MainActivity extends AppCompatActivity {
 
         if (code == 22 && local < launcherApps.size() - 1) {
 
+
             local++;
+            arrowSound();
 
         }
         if (code == 21 && local > 0) {
+
             local--;
+            arrowSound();
+
         }
         if (code == 23) {
             launcherApps.get(local).performClick();
         }
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(iconWidth + 30, iconWidth + 30);
         LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         paramsNormal.setMargins(50, 10, 0, 10);
         paramsMax.setMargins(50, 10, 0, 10);
@@ -329,7 +369,7 @@ public class MainActivity extends AppCompatActivity {
         layout.removeAllViews();
 
 
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(150, 150);
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(iconWidth + 30, iconWidth + 30);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         params.setMargins(50, 10, 0, 10);
         paramsMax.setMargins(50, 10, 0, 10);
@@ -339,7 +379,7 @@ public class MainActivity extends AppCompatActivity {
                 getVersion(packageInfo.packageName);
                 if (packageInfo.packageName.contains(apps[i])) {
 
-                    System.out.println( packageInfo.packageName+" -> "+getVersion(packageInfo.packageName));
+                    System.out.println(packageInfo.packageName + " -> " + getVersion(packageInfo.packageName));
                     ImageView newImage = new ImageView(this);
                     try {
                         Resources resources = pm.getResourcesForApplication(packageInfo);
@@ -388,6 +428,16 @@ public class MainActivity extends AppCompatActivity {
 
         return versionName;
 
+    }
+
+    private void arrowSound() {
+
+
+        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.arrow);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            mediaPlayer.clearOnSubtitleDataListener();
+        }
+        mediaPlayer.start();
     }
 }
 
