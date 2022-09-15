@@ -31,6 +31,7 @@
                 android:layout_weight="2"
                 android:text="Checking..."
                 android:textColor="#FFFFFF"
+                android:textAllCaps="true"
                 android:textSize="130px"></TextView>
 
             <DigitalClock
@@ -47,7 +48,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:layout_weight="100"
+            android:layout_weight="1"
             android:orientation="horizontal">
 
 
@@ -63,9 +64,20 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/ok">
+                android:id="@+id/connection"
+                android:layout_width="15dp"
+                android:layout_height="10dp"
+                android:src="@mipmap/ic_launcher"
+             >
+
+            </ImageView>
+
+            <ImageView
+                android:id="@+id/server"
+                android:layout_width="15dp"
+                android:layout_height="10dp"
+                android:src="@mipmap/ic_launcher"
+                >
 
             </ImageView>
 

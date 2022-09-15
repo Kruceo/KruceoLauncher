@@ -29,6 +29,7 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.net.ConnectivityManager;
@@ -74,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
     String downloadLink = "http://kruceo.com:15003/apk/";
     String jsonLink = "http://kruceo.com:15003/in";
     String jsonUnLink = "http://kruceo.com:15003/un";
+    String checkLink = "http://kruceo.com:15003/check";
     public boolean donwloading = true;
 
     String actualFlag = "default";
@@ -95,12 +97,11 @@ public class MainActivity extends AppCompatActivity {
 
     List<ImageView> launcherApps = new ArrayList<>();
 
-    MediaPlayer mediaPlayer;
     Thread messageThread;
     ScheduledExecutorService attAppsExecutor;
 
 
-    @RequiresApi(api = Build.VERSION_CODES.R)
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -108,33 +109,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-      if(!haveNetworkConnection())
-      {
-          actualFlag = "normal";
-
-          {
-              LinearLayout layout = findViewById(R.id.principal);
-              layout.removeAllViews();
-              TextView textView = new TextView(getApplicationContext());
-              textView.setText("Conexao ruim, ligue (47)99614-3774)");
-              layout.addView(textView);
-          }
-      }
-
-if(actualFlag != "sleep"){
-        setWallpaperFromServer();}
-
-
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             System.out.println(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE));
-            requestPermissions(
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    1);
-
-            Toast toast = Toast.makeText(MainActivity.this,
-                    "Verificando app's...", Toast.LENGTH_LONG);
-            toast.show();
-
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(
+                        new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                        1);
+            }
         }
 
         try {
@@ -142,11 +123,6 @@ if(actualFlag != "sleep"){
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-
-
-        TextView view = (TextView) findViewById(R.id.message);
-
-
         messageThread = new Thread() {
             @Override
             public void run() {
@@ -157,14 +133,13 @@ if(actualFlag != "sleep"){
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    view.setText(actualFlag+" net:"+haveNetworkConnection()); // or message
+                                     // or message
                                     try {
                                         attAppList();
                                     } catch (PackageManager.NameNotFoundException e) {
                                         e.printStackTrace();
                                     }
-                                    if(!haveNetworkConnection())
-                                    {
+                                    if (!haveNetworkConnection()) {
                                         actualFlag = "normal";
 
                                         {
@@ -197,11 +172,10 @@ if(actualFlag != "sleep"){
 
         attAppsExecutor = Executors.newSingleThreadScheduledExecutor();
         attAppsExecutor.scheduleAtFixedRate(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void run() {
                 try {
-                    if (actualFlag != "sleep" && haveNetworkConnection()) {
+                    if (actualFlag != "sleep" && haveNetworkConnection() && haveServerConnection()) {
 
                         PackageManager pm = getPackageManager();
                         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
@@ -247,6 +221,7 @@ if(actualFlag != "sleep"){
                                 donwloading = true;
 
                                 downloadTask.execute(new Runnable() {
+                                    @RequiresApi(api = Build.VERSION_CODES.N)
                                     @Override
                                     public void run() {
                                         actualFlag = "getting " + unitApk.name;
@@ -260,7 +235,9 @@ if(actualFlag != "sleep"){
                                             actualFlag = "Download nao terminado";
                                             break;
                                         }
-                                        lib.installApk(getApplicationContext(), apk);
+                                        if (apk.length() > 0) {
+                                            lib.installApk(getApplicationContext(), apk);
+                                        }
                                         donwloading = false;
                                         actualFlag = "normal";
                                     }
@@ -290,7 +267,7 @@ if(actualFlag != "sleep"){
                     e.printStackTrace();
                 }
             }
-        }, 0, 15, TimeUnit.SECONDS);
+        }, 0, 10, TimeUnit.SECONDS);
         System.out.println("[KRUCEO] Thread de att iniciado...");
     }
 
@@ -303,23 +280,31 @@ if(actualFlag != "sleep"){
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
+
     @Override
     protected void onResume() {
         super.onResume();
-        if (haveNetworkConnection()){
-            System.out.println(haveNetworkConnection());
-        actualFlag = "normal";
-
+        System.out.println("[KRUCEO] INTERNET: "+haveNetworkConnection());
         System.out.println("[KRUCEO] Maximizado, flag: " + actualFlag);
-        try {
-            setWallpaperFromServer();
-            attAppList();
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }}
+        actualFlag = "normal";
+        if (haveNetworkConnection()) {
 
+            new Thread()
+            {
+                @Override
+                public void run() {
+                    if(haveServerConnection()){
+                    setWallpaperFromServer();}
+                }
+            }.start();
+            try {
+                attAppList();
+            } catch (PackageManager.NameNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
 
     int count = 0;
 
@@ -473,10 +458,10 @@ if(actualFlag != "sleep"){
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.N)
     public void setWallpaperFromServer() {
 
         Thread wallpaperThread = new Thread() {
+            @RequiresApi(api = Build.VERSION_CODES.N)
             public void run() {
                 File wallpaperImage = new File(getApplicationContext().getFilesDir().getPath() + "/rafola.png");
                 Boolean download = false;
@@ -511,11 +496,62 @@ if(actualFlag != "sleep"){
         ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo[] netInfo = cm.getAllNetworkInfo();
         for (NetworkInfo ni : netInfo) {
-            if (ni.isConnected()) {
+            Boolean connection = ni.isConnected();
+            ImageView connectionIcon = findViewById(R.id.connection);
+            MainActivity.this.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (connection) {
+                        connectionIcon.setColorFilter(Color.GREEN);
+
+                    } else {
+                        connectionIcon.setColorFilter(Color.RED);
+                    }
+
+                }
+            });
+            if (connection) {
                 return true;
             }
+
+        }
+        return false;
+    }
+
+
+    private boolean haveServerConnection() {
+        Boolean check = false;
+        try {
+
+            String req = new KruceoLib().getRequest(checkLink);
+            check = req.contains("connection");
+            System.out.println(new KruceoLib().getRequest(checkLink) + "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEU BOA" + check);
+        } catch (Error e) {
+            check = false;
+            System.out.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEU RUIM");
+        }
+
+        Boolean finalCheck = check;
+        MainActivity.this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                ImageView serverIcon = findViewById(R.id.server);
+                System.out.println("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + finalCheck);
+                if (finalCheck) {
+                    System.out.println("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
+                    serverIcon.setColorFilter(Color.GREEN);
+                    System.out.println("RRRRRRRWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
+                } else {
+                    serverIcon.setColorFilter(Color.RED);
+                }
+
+            }
+        });
+        if (check) {
+            return true;
         }
         return false;
     }
 }
+
 
