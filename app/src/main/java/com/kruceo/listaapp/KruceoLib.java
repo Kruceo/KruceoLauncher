@@ -2,6 +2,7 @@ package com.kruceo.listaapp;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -10,6 +11,7 @@ import androidx.core.content.FileProvider;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -35,9 +37,6 @@ public class KruceoLib {
             error.printStackTrace();
             return "Erro - " + url;
         }
-
-
-
     }
 
 
@@ -75,6 +74,13 @@ public class KruceoLib {
         intent.setDataAndType(FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID + ".provider", apk), "application/vnd.android.package-archive");
         context.startActivity(intent);
         System.out.println("Install intent send");
+        return true;
+    }
+    public boolean uninstallApk(Context context, String packageName) {
+        Intent intent = new Intent(Intent.ACTION_DELETE);
+        intent.setData(Uri.parse("package:"+packageName));
+        context.startActivity(intent);
+        System.out.println("[BAD] uninstall intent send");
         return true;
     }
 
