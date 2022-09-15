@@ -64,8 +64,9 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-    String downloadLink = "http://kruceo.com:15003/";
-    String jsonLink = "http://kruceo.com:15003/try";
+    String downloadLink = "http://kruceo.com:15003/apk/";
+    String jsonLink = "http://kruceo.com:15003/in";
+    String jsonUnLink = "http://kruceo.com:15003/un";
     public boolean donwloading = true;
 
     String actualFlag = "default";
@@ -111,78 +112,38 @@ public class MainActivity extends AppCompatActivity {
                     "Verificando app's...", Toast.LENGTH_LONG);
             toast.show();
 
-            try {
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Aceite para o app poder contiinuar o funcionamento!");
-                builder.setPositiveButton("Aceitar", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                        1);
-                            }
-                        });
-
-
-
-
-
-                        builder.show();
-
-                // Thread.sleep(15000);
-
-//                finish();
-//
-//                startActivity(getIntent());
-//
-//                System.exit(0);
-
-            } catch (Error e) {
-                e.printStackTrace();
-            }
-
         }
-
 
         try {
             attAppList();
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
         }
-        ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
-        ActivityManager activityManager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        activityManager.getMemoryInfo(mi);
-        double availableMegs = mi.availMem / 0x100000L;
 
-        double percentAvail = mi.availMem / (double) mi.totalMem * 100.0;
-        System.out.println("memoria usada: " + percentAvail + "MB");
-        TextView view = (TextView) findViewById(R.id.cavalo);
+
+        TextView view = (TextView) findViewById(R.id.message);
 
 
         messageThread = new Thread() {
             @Override
             public void run() {
-
-
                 while (!isInterrupted()) {
                     try {
-
-                        Thread.sleep(60 * 1000);
-                        String message = new KruceoLib().getRequest("http://kruceo.com:15003/message");
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                count++;
-
-                                view.setText(message);
-                                try {
-                                    attAppList();
-                                } catch (PackageManager.NameNotFoundException e) {
-                                    e.printStackTrace();
+                        if (actualFlag != "sleep") {
+                            //String message = new KruceoLib().getRequest("http://kruceo.com:15003/message");
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    view.setText(actualFlag); // or message
+                                    try {
+                                        attAppList();
+                                    } catch (PackageManager.NameNotFoundException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
-                            }
-                        });
-
+                            });
+                            Thread.sleep(1000 * 50);
+                        }
                     } catch (Error | InterruptedException e) {
 
                     }
@@ -191,88 +152,133 @@ public class MainActivity extends AppCompatActivity {
         };
 
         messageThread.start();
+        System.out.println("[KRUCEO] MessageThread iniciado...");
 
-        PackageManager pm = getPackageManager();
-        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
-        System.out.println("***************************************************************************************************************");
+
+        int NOTHING = 1, UNINSTALL = 2, INSTALL = 3;
+
         attAppsExecutor = Executors.newSingleThreadScheduledExecutor();
         attAppsExecutor.scheduleAtFixedRate(new Runnable() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             @Override
             public void run() {
                 try {
-                    actualFlag = "verificando lista de app's";
-                    KruceoLib lib = new KruceoLib();
+                    if (actualFlag != "sleep") {
 
-                    String jsonToInstall = lib.getRequest(jsonLink);
-                    List<KruceoLib.Apk> apks = lib.jsonToAPKList(jsonToInstall);
+                        PackageManager pm = getPackageManager();
+                        List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
 
-                    for (KruceoLib.Apk unitApk : apks) {
-                        System.out.println("############ trying with " + unitApk.name + "############");
-                        File apk = new File(Environment.getExternalStorageDirectory() + "/Download/" + unitApk.name + ".apk");
-                        boolean exist = false;
-                        for (ApplicationInfo appInstalled : packages) {
-                            if (!exist) {
+                        actualFlag = "verificando apps";
+                        KruceoLib lib = new KruceoLib();
+                        String jsonToInstall = lib.getRequest(jsonLink);
+                        System.out.println("************* " + jsonToInstall);
+
+                        String jsonToUninstall = lib.getRequest(jsonUnLink);
+                        System.out.println("************* " + jsonToUninstall);
+
+                        List<KruceoLib.Apk> apksToInstall = lib.jsonToAPKList(jsonToInstall);
+
+                        List<KruceoLib.Apk> apksToUninstall = lib.jsonToAPKList(jsonToUninstall);
+
+                        for (KruceoLib.Apk unitApk : apksToInstall) {
+                            int exist = INSTALL;
+                            File apk = new File(Environment.getExternalStorageDirectory() + "/Download/" + unitApk.name + ".apk");
+                            System.out.println("[KRUCEO] Procurando para instalar "+ unitApk.name);
+
+                            for (ApplicationInfo appInstalled : packages) {
+
 
                                 if (appInstalled.packageName.contains(unitApk.name)) {
-                                    exist = true;
-                                    System.out.println(appInstalled.packageName + " == " + unitApk.name);
-                                    System.out.println(getVersion(appInstalled.packageName) + " == " + unitApk.version);
+                                    System.out.println("--------###################--------");
+                                    System.out.println("[KRUCEO] " + appInstalled.packageName + " == " + unitApk.name);
+                                    System.out.println("[KRUCEO] " + getVersion(appInstalled.packageName) + " == " + unitApk.version);
+
+                                    exist = NOTHING;
+
                                     if (!getVersion(appInstalled.packageName).contains(unitApk.version)) {
 
-                                        exist = false;
+                                        exist = INSTALL;
 
                                     }
-
                                 }
                             }
-                        }
-                        if (exist == false) {
-                            ExecutorService downloadTask = Executors.newSingleThreadExecutor();
-                            donwloading = true;
-                            downloadTask.execute(new Runnable() {
-                                @Override
-                                public void run() {
-                                    actualFlag = "downloading " + unitApk;
-                                    boolean download = false;
-                                    try {
-                                        download = lib.downloadFrom(downloadLink + unitApk.name + ".apk", apk);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
+                            System.out.println("[KRUCEO] DO: " + exist);
+                            System.out.println("-----------------------------------\n");
+                            if (exist == INSTALL) {
+                                ExecutorService downloadTask = Executors.newSingleThreadExecutor();
+                                donwloading = true;
+
+                                downloadTask.execute(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        actualFlag = "getting " + unitApk.name;
+                                        boolean download = false;
+                                        try {
+                                            download = lib.downloadFrom(downloadLink + unitApk.name + ".apk", apk);
+                                        } catch (IOException e) {
+                                            System.out.println("[KRUCEO] " + unitApk.name + "não esta disponivel no servidor");
+                                        }
+                                        while (!download) {
+                                            actualFlag = "Download nao terminado";
+                                            break;
+                                        }
+                                        lib.installApk(getApplicationContext(), apk);
+                                        donwloading = false;
+                                        actualFlag = "normal";
                                     }
-                                    while (!download) {
-                                    }
-                                    lib.installApk(getApplicationContext(), apk);
-                                    donwloading = false;
+                                });
+                                System.out.println("[KRUCEO] Download de " + apk.getName());
+                            }
+                        }     ////INSTALAR
+
+                        for (KruceoLib.Apk unitApk : apksToUninstall) {
+                            int exist = NOTHING;
+                            System.out.println("[KRUCEO] Procurando para desinstalar "+ unitApk.name);
+
+                            for (ApplicationInfo appInstalled : packages) {
+                                if (appInstalled.packageName.contains(unitApk.name)) {
+                                    System.out.println("--------###################--------");
+                                    System.out.println("[KRUCEO] " + appInstalled.packageName + " == " + unitApk.name);
+                                    System.out.println("[KRUCEO] " + getVersion(appInstalled.packageName) + " == " + unitApk.version);
+                                    new KruceoLib().uninstallApk(getApplicationContext(),appInstalled.packageName);
+                                    System.out.println("___________________________________");
                                 }
-                            });
-
-
-                        }
+                            }
+                        }    //////DESINSTALAR
                     }
+
+                    actualFlag = "normal";
                 } catch (Error e) {
                     e.printStackTrace();
-                    e.notifyAll();
                 }
-                Log.d("@", "######################################################");
             }
-        }, 0, 120, TimeUnit.SECONDS);
-
+        }, 0, 15, TimeUnit.SECONDS);
+        System.out.println("[KRUCEO] Thread de att iniciado...");
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        actualFlag = "sleep";
+        System.out.println("[KRUCEO] Minimizado, flag: " + actualFlag);
 
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        actualFlag = "normal";
+        System.out.println("[KRUCEO] Maximizado, flag: " + actualFlag);
+        try {
+            attAppList();
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
 
     }
 
     int count = 0;
-
-    public boolean checkAppList() {
-
-        return true;
-    }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -280,17 +286,10 @@ public class MainActivity extends AppCompatActivity {
         int code = event.getKeyCode();
 
         if (code == 22 && local < launcherApps.size() - 1) {
-
-
             local++;
-            arrowSound();
-
         }
         if (code == 21 && local > 0) {
-
             local--;
-            arrowSound();
-
         }
         if (code == 23) {
             launcherApps.get(local).performClick();
@@ -360,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void attAppList() throws PackageManager.NameNotFoundException {
 
-        System.out.println("atualizando lista");
+        System.out.println("[KRUCEO] Atualizando grade de app's ");
 
         launcherApps.clear();
         PackageManager pm = getPackageManager();
@@ -377,6 +376,7 @@ public class MainActivity extends AppCompatActivity {
         for (int i = 0; i < apps.length; i++) {
             for (ApplicationInfo packageInfo : packages) {
                 getVersion(packageInfo.packageName);
+                //System.out.println(packageInfo.packageName + " -> " + getVersion(packageInfo.packageName));
                 if (packageInfo.packageName.contains(apps[i])) {
 
                     System.out.println(packageInfo.packageName + " -> " + getVersion(packageInfo.packageName));
@@ -394,25 +394,25 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public void onClick(View view) {
 
+
                             Intent launchIntent = getPackageManager().getLaunchIntentForPackage(packageInfo.packageName);
                             if (launchIntent != null) {
-                                startActivity(launchIntent);
-                                System.out.println("------> " + launchIntent.getPackage());
+                                 startActivity(launchIntent);
+                                System.out.println("%%%%%%%%%%%%%%%%%%%%" + packageInfo.packageName);
+                                System.out.println("[KRUCEO] Iniciando" + launchIntent.getPackage());
                             }
                         }
 
                     });
                 }
             }
-
-
         }
 
 
         if (launcherApps.size() > 0) {
             launcherApps.get(local).setLayoutParams(paramsMax);
         } else {
-            System.out.println("nenhum app dos listados encontrado, por favor reinicie o dispositivo e aceite todos os requerimentos");
+            System.out.println("[BAD]nenhum app dos listados encontrado, por favor reinicie o dispositivo e aceite todos os requerimentos");
         }
 
     }
@@ -428,16 +428,6 @@ public class MainActivity extends AppCompatActivity {
 
         return versionName;
 
-    }
-
-    private void arrowSound() {
-
-
-        mediaPlayer = MediaPlayer.create(getApplicationContext(), R.raw.arrow);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            mediaPlayer.clearOnSubtitleDataListener();
-        }
-        mediaPlayer.start();
     }
 }
 
