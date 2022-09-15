@@ -11,49 +11,65 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-
     <LinearLayout
-        android:id="@+id/secundario"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="top"
-        android:orientation="horizontal">
-
-        <TextView
-            android:id="@+id/cavalo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            android:text="Checking..."
-            android:textColor="#FFFFFF"
-            android:textSize="130px"></TextView>
-
-        <DigitalClock
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-
-            android:gravity="right"
-
-            android:textColor="@color/white"
-            android:textSize="130px">
-
-
-        </DigitalClock>
-
-
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/principal"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:layout_weight="0"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="2"
+                android:text="Checking..."
+                android:textColor="#FFFFFF"
+                android:textSize="130px"></TextView>
+
+            <DigitalClock
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="right"
+                android:textColor="@color/white"
+                android:textSize="130px"></DigitalClock>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/principal"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:layout_weight="100"
+            android:orientation="horizontal">
 
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="0"
+            android:backgroundTint="@color/white"
+            android:gravity="right"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/ok">
+
+            </ImageView>
+
+        </LinearLayout>
     </LinearLayout>
-
 
 </LinearLayout>

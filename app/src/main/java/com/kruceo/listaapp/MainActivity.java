@@ -26,8 +26,13 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInstaller;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -44,6 +49,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -73,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
 
     int local = 0;
 
-
     String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "spotify", "com.netflix.mediaclient", "com.google.android.youtube.tv", "instagram", "amazon.avod", "pou"};
 
 
@@ -93,14 +99,31 @@ public class MainActivity extends AppCompatActivity {
     Thread messageThread;
     ScheduledExecutorService attAppsExecutor;
 
-    @RequiresApi(api = Build.VERSION_CODES.M)
+
+    @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mediaPlayer = null;
+
+      if(!haveNetworkConnection())
+      {
+          actualFlag = "normal";
+
+          {
+              LinearLayout layout = findViewById(R.id.principal);
+              layout.removeAllViews();
+              TextView textView = new TextView(getApplicationContext());
+              textView.setText("Conexao ruim, ligue (47)99614-3774)");
+              layout.addView(textView);
+          }
+      }
+
+if(actualFlag != "sleep"){
+        setWallpaperFromServer();}
+
 
         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             System.out.println(ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE));
@@ -134,15 +157,30 @@ public class MainActivity extends AppCompatActivity {
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                    view.setText(actualFlag); // or message
+                                    view.setText(actualFlag+" net:"+haveNetworkConnection()); // or message
                                     try {
                                         attAppList();
                                     } catch (PackageManager.NameNotFoundException e) {
                                         e.printStackTrace();
                                     }
+                                    if(!haveNetworkConnection())
+                                    {
+                                        actualFlag = "normal";
+
+                                        {
+                                            LinearLayout layout = findViewById(R.id.principal);
+                                            layout.removeAllViews();
+                                            TextView textView = new TextView(getApplicationContext());
+                                            textView.setText("Sem conexão\nLigue (47)99614-3774");
+                                            textView.setGravity(1);
+                                            textView.setTextSize(30);
+                                            textView.setTextColor(Color.WHITE);
+                                            layout.addView(textView);
+                                        }
+                                    }
                                 }
                             });
-                            Thread.sleep(1000 * 50);
+                            Thread.sleep(1000 * 5);
                         }
                     } catch (Error | InterruptedException e) {
 
@@ -163,7 +201,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    if (actualFlag != "sleep") {
+                    if (actualFlag != "sleep" && haveNetworkConnection()) {
 
                         PackageManager pm = getPackageManager();
                         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
@@ -171,10 +209,10 @@ public class MainActivity extends AppCompatActivity {
                         actualFlag = "verificando apps";
                         KruceoLib lib = new KruceoLib();
                         String jsonToInstall = lib.getRequest(jsonLink);
-                        System.out.println("************* " + jsonToInstall);
+                        System.out.println("[KRUCEO] " + jsonToInstall);
 
                         String jsonToUninstall = lib.getRequest(jsonUnLink);
-                        System.out.println("************* " + jsonToUninstall);
+                        System.out.println("[KRUCEO] " + jsonToUninstall);
 
                         List<KruceoLib.Apk> apksToInstall = lib.jsonToAPKList(jsonToInstall);
 
@@ -183,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         for (KruceoLib.Apk unitApk : apksToInstall) {
                             int exist = INSTALL;
                             File apk = new File(Environment.getExternalStorageDirectory() + "/Download/" + unitApk.name + ".apk");
-                            System.out.println("[KRUCEO] Procurando para instalar "+ unitApk.name);
+                            System.out.println("[KRUCEO] Procurando para instalar " + unitApk.name);
 
                             for (ApplicationInfo appInstalled : packages) {
 
@@ -233,14 +271,14 @@ public class MainActivity extends AppCompatActivity {
 
                         for (KruceoLib.Apk unitApk : apksToUninstall) {
                             int exist = NOTHING;
-                            System.out.println("[KRUCEO] Procurando para desinstalar "+ unitApk.name);
+                            System.out.println("[KRUCEO] Procurando para desinstalar " + unitApk.name);
 
                             for (ApplicationInfo appInstalled : packages) {
                                 if (appInstalled.packageName.contains(unitApk.name)) {
                                     System.out.println("--------###################--------");
                                     System.out.println("[KRUCEO] " + appInstalled.packageName + " == " + unitApk.name);
                                     System.out.println("[KRUCEO] " + getVersion(appInstalled.packageName) + " == " + unitApk.version);
-                                    new KruceoLib().uninstallApk(getApplicationContext(),appInstalled.packageName);
+                                    new KruceoLib().uninstallApk(getApplicationContext(), appInstalled.packageName);
                                     System.out.println("___________________________________");
                                 }
                             }
@@ -265,16 +303,21 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onResume() {
         super.onResume();
+        if (haveNetworkConnection()){
+            System.out.println(haveNetworkConnection());
         actualFlag = "normal";
+
         System.out.println("[KRUCEO] Maximizado, flag: " + actualFlag);
         try {
+            setWallpaperFromServer();
             attAppList();
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
-        }
+        }}
 
     }
 
@@ -397,7 +440,7 @@ public class MainActivity extends AppCompatActivity {
 
                             Intent launchIntent = getPackageManager().getLaunchIntentForPackage(packageInfo.packageName);
                             if (launchIntent != null) {
-                                 startActivity(launchIntent);
+                                startActivity(launchIntent);
                                 System.out.println("%%%%%%%%%%%%%%%%%%%%" + packageInfo.packageName);
                                 System.out.println("[KRUCEO] Iniciando" + launchIntent.getPackage());
                             }
@@ -428,6 +471,51 @@ public class MainActivity extends AppCompatActivity {
 
         return versionName;
 
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    public void setWallpaperFromServer() {
+
+        Thread wallpaperThread = new Thread() {
+            public void run() {
+                File wallpaperImage = new File(getApplicationContext().getFilesDir().getPath() + "/rafola.png");
+                Boolean download = false;
+                try {
+                    download = new KruceoLib().downloadFrom("http://kruceo.com:15003/wallpaper.png", wallpaperImage);
+                } catch (IOException e) {
+                }
+                while (!download) {
+
+                }
+                MainActivity.this.runOnUiThread(new Runnable() {
+
+                    public void run() {
+
+                        actualFlag = "getting wallpaper";
+
+
+                        Drawable drawable = Drawable.createFromPath(getApplicationContext().getFilesDir().getPath() + "/rafola.png");
+
+                        getWindow().setBackgroundDrawable(drawable);
+                        donwloading = false;
+                        actualFlag = "normal";
+                    }
+                });
+            }
+        };
+        wallpaperThread.start();
+
+    }
+
+    private boolean haveNetworkConnection() {
+        ConnectivityManager cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo[] netInfo = cm.getAllNetworkInfo();
+        for (NetworkInfo ni : netInfo) {
+            if (ni.isConnected()) {
+                return true;
+            }
+        }
+        return false;
     }
 }
 

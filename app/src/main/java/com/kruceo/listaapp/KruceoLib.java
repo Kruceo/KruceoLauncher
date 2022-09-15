@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
+import android.util.Base64;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.content.FileProvider;
@@ -15,6 +17,9 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -124,4 +129,21 @@ public class KruceoLib {
     }
 
 
+
+
+
+    public void decodeToImage(File path,String imageString) throws IOException {
+        String base64String = imageString;
+        byte[] decodedBytes = new byte[0];
+
+        decodedBytes = Base64.decode(base64String, Base64.DEFAULT);
+
+
+        FileOutputStream writer = new FileOutputStream(new File(path, "rafola.png" ));
+        writer.write(decodedBytes);
+        writer.close();
+        System.out.println("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"+ path.getPath());
+
+
+    }
 }
