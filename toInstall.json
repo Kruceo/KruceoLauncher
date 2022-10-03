@@ -1,18 +1,14 @@
 [
     {
-        "apk": "yukaline.tv",
+        "apk": "com.yukaline.tv",
         "version": "3.9.1"
     },
     {
-        "apk": "spotify",
-        "version": "8.7.48.1058"
+        "apk": "youtube.tv",
+        "version": "2.17.006"
     },
     {
-        "apk": "iptv",
-        "version": "MOB-2.0.99.R.5107"
-    },
-    {
-        "apk": "pou",
-        "version": "1.4.103"
+        "apk": "kruceo.launcher",
+        "version": "0.10.02"
     }
 ]
