@@ -65,8 +65,9 @@
 
             <ImageView
                 android:id="@+id/connection"
-                android:layout_width="15dp"
-                android:layout_height="10dp"
+                android:layout_width="30px"
+                android:layout_height="30px"
+                android:layout_marginRight="30px"
                 android:src="@mipmap/ic_launcher"
              >
 
@@ -74,8 +75,8 @@
 
             <ImageView
                 android:id="@+id/server"
-                android:layout_width="15dp"
-                android:layout_height="10dp"
+                android:layout_width="30px"
+                android:layout_height="30px"
                 android:src="@mipmap/ic_launcher"
                 >
 

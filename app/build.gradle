@@ -3,14 +3,14 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk 31
 
     defaultConfig {
-        applicationId "com.kruceo.listaapp"
+        applicationId 'com.kruceo.launcher'
         minSdk 21
-        targetSdk 32
-        versionCode 1
-        versionName "1.0"
+        targetSdk 25
+        versionCode 1001
+        versionName '0.10.01'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

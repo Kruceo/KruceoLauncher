@@ -72,10 +72,12 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-    String downloadLink = "http://kruceo.com:15003/apk/";
-    String jsonLink = "http://kruceo.com:15003/in";
-    String jsonUnLink = "http://kruceo.com:15003/un";
-    String checkLink = "http://kruceo.com:15003/check";
+    String baseLink = "http://192.168.20.198:15003";
+    String downloadLink = baseLink+"/apk/";
+    String jsonLink = baseLink+"/in";
+    String jsonUnLink = baseLink+"/un";
+    String checkLink = baseLink+"/check";
+
     public boolean donwloading = true;
 
     String actualFlag = "default";
@@ -129,11 +131,12 @@ public class MainActivity extends AppCompatActivity {
                 while (!isInterrupted()) {
                     try {
                         if (actualFlag != "sleep") {
-                            //String message = new KruceoLib().getRequest("http://kruceo.com:15003/message");
+                            String message = new KruceoLib().getRequest(baseLink+"/message");
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
-                                     // or message
+                                    TextView messageView = findViewById(R.id.message);
+                                    messageView.setText(message);// or message
                                     try {
                                         attAppList();
                                     } catch (PackageManager.NameNotFoundException e) {
@@ -155,7 +158,7 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             });
-                            Thread.sleep(1000 * 5);
+                            Thread.sleep(1000 * 30);
                         }
                     } catch (Error | InterruptedException e) {
 
@@ -206,7 +209,10 @@ public class MainActivity extends AppCompatActivity {
                                     System.out.println("[KRUCEO] " + getVersion(appInstalled.packageName) + " == " + unitApk.version);
 
                                     exist = NOTHING;
-
+                                    if(unitApk.version.equals("X.X.X")){
+                                        System.out.println("[KRUCEO] Passed...");
+                                        continue;
+                                    }
                                     if (!getVersion(appInstalled.packageName).contains(unitApk.version)) {
 
                                         exist = INSTALL;
@@ -267,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-        }, 0, 10, TimeUnit.SECONDS);
+        }, 0, 60, TimeUnit.SECONDS);
         System.out.println("[KRUCEO] Thread de att iniciado...");
     }
 
@@ -466,7 +472,7 @@ public class MainActivity extends AppCompatActivity {
                 File wallpaperImage = new File(getApplicationContext().getFilesDir().getPath() + "/rafola.png");
                 Boolean download = false;
                 try {
-                    download = new KruceoLib().downloadFrom("http://kruceo.com:15003/wallpaper.png", wallpaperImage);
+                    download = new KruceoLib().downloadFrom(baseLink+"/wallpaper.png", wallpaperImage);
                 } catch (IOException e) {
                 }
                 while (!download) {
