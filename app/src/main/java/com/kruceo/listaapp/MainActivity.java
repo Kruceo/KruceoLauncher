@@ -43,6 +43,7 @@ import android.os.Process;
 
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -95,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private int helpIndex = 0;
     private int[] settingsCodehelp = {10, 10, 11, 14, 11, 10, 7, 7};
 
-    public int iconWidth = 130;
+    public int iconWidth = 50;
 
     List<ImageView> launcherApps = new ArrayList<>();
 
@@ -300,7 +301,8 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     if(haveServerConnection()){
-                    setWallpaperFromServer();}
+                    setWallpaperFromServer();
+                    }
                 }
             }.start();
             try {
@@ -310,6 +312,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
 
 
     int count = 0;
@@ -401,8 +404,8 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout layout = findViewById(R.id.principal);
         layout.removeAllViews();
 
-
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(iconWidth + 30, iconWidth + 30);
+        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, iconWidth, getResources().getDisplayMetrics());
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams((int) px * 2,(int) px * 2);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(iconWidth, iconWidth);
         params.setMargins(50, 10, 0, 10);
         paramsMax.setMargins(50, 10, 0, 10);
@@ -469,7 +472,10 @@ public class MainActivity extends AppCompatActivity {
         Thread wallpaperThread = new Thread() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             public void run() {
-                File wallpaperImage = new File(getApplicationContext().getFilesDir().getPath() + "/rafola.png");
+                File wallpaperImage = new File(getApplicationContext().getFilesDir().getPath() + "/wallpaper2.png");
+                if(wallpaperImage.exists()){
+                    System.out.println(wallpaperImage.delete());
+                }
                 Boolean download = false;
                 try {
                     download = new KruceoLib().downloadFrom(baseLink+"/wallpaper.png", wallpaperImage);
@@ -485,7 +491,7 @@ public class MainActivity extends AppCompatActivity {
                         actualFlag = "getting wallpaper";
 
 
-                        Drawable drawable = Drawable.createFromPath(getApplicationContext().getFilesDir().getPath() + "/rafola.png");
+                        Drawable drawable = Drawable.createFromPath(getApplicationContext().getFilesDir().getPath() + "/wallpaper2.png");
 
                         getWindow().setBackgroundDrawable(drawable);
                         donwloading = false;
@@ -523,7 +529,6 @@ public class MainActivity extends AppCompatActivity {
         }
         return false;
     }
-
 
     private boolean haveServerConnection() {
         Boolean check = false;

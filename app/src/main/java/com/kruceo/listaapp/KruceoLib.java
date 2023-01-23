@@ -44,7 +44,6 @@ public class KruceoLib {
         }
     }
 
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     public boolean downloadFrom(String url, File out) throws IOException {
         URL fetchWebsite = null;
@@ -70,7 +69,6 @@ public class KruceoLib {
 
     }
 
-
     public boolean installApk(Context context, File apk) {
         Intent intent = new Intent();
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
@@ -81,6 +79,7 @@ public class KruceoLib {
         System.out.println("Install intent send");
         return true;
     }
+
     public boolean uninstallApk(Context context, String packageName) {
         Intent intent = new Intent(Intent.ACTION_DELETE);
         intent.setData(Uri.parse("package:"+packageName));
@@ -127,10 +126,6 @@ public class KruceoLib {
         }
 
     }
-
-
-
-
 
     public void decodeToImage(File path,String imageString) throws IOException {
         String base64String = imageString;

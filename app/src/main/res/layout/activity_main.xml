@@ -32,7 +32,7 @@
                 android:text="Checking..."
                 android:textColor="#FFFFFF"
                 android:textAllCaps="true"
-                android:textSize="130px"></TextView>
+                android:textSize="50dp"></TextView>
 
             <DigitalClock
                 android:layout_width="wrap_content"
@@ -40,7 +40,7 @@
                 android:layout_weight="1"
                 android:gravity="right"
                 android:textColor="@color/white"
-                android:textSize="130px"></DigitalClock>
+                android:textSize="50dp"></DigitalClock>
         </LinearLayout>
 
         <LinearLayout
@@ -65,9 +65,9 @@
 
             <ImageView
                 android:id="@+id/connection"
-                android:layout_width="30px"
-                android:layout_height="30px"
-                android:layout_marginRight="30px"
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:layout_marginRight="13dp"
                 android:src="@mipmap/ic_launcher"
              >
 
@@ -75,8 +75,8 @@
 
             <ImageView
                 android:id="@+id/server"
-                android:layout_width="30px"
-                android:layout_height="30px"
+                android:layout_width="13dp"
+                android:layout_height="13dp"
                 android:src="@mipmap/ic_launcher"
                 >
 

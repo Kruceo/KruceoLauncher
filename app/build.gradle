@@ -9,8 +9,8 @@ android {
         applicationId 'com.kruceo.launcher'
         minSdk 21
         targetSdk 25
-        versionCode 1001
-        versionName '0.10.01'
+        versionCode 1002
+        versionName '0.10.02'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
