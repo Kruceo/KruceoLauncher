@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# CHANGE THESE FOR YOUR APP
 app_package="com.kruceo.listaapp"
 dir_app_name="listaapp"
 MAIN_ACTIVITY="MainActivity"
