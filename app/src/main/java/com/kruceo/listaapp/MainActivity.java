@@ -73,18 +73,18 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-    String baseLink = "http://192.168.20.198:15003";
-    String downloadLink = baseLink+"/apk/";
+    String baseLink = "http://192.168.20.197:15003";
+    String downloadLink = baseLink+"/get/app/";
     String jsonLink = baseLink+"/in";
     String jsonUnLink = baseLink+"/un";
     String checkLink = baseLink+"/check";
+    String wallpaperLink = baseLink+"/get/wallpaper";
+
+    String messageLink = baseLink+"/get/message";
 
     public boolean donwloading = true;
-
     String actualFlag = "default";
-
     int local = 0;
-
     String[] apps = {"com.firsti.iptv", "com.yukaline.tv.stb", "spotify", "com.netflix.mediaclient", "com.google.android.youtube.tv", "instagram", "amazon.avod", "pou"};
 
 
@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
     private int helpIndex = 0;
     private int[] settingsCodehelp = {10, 10, 11, 14, 11, 10, 7, 7};
 
-    public int iconWidth = 50;
+    public int iconWidth = 75;
 
     List<ImageView> launcherApps = new ArrayList<>();
 
@@ -107,8 +107,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -132,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 while (!isInterrupted()) {
                     try {
                         if (actualFlag != "sleep") {
-                            String message = new KruceoLib().getRequest(baseLink+"/message");
+                            String message = new KruceoLib().getRequest(messageLink);
                             runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -150,7 +148,7 @@ public class MainActivity extends AppCompatActivity {
                                             LinearLayout layout = findViewById(R.id.principal);
                                             layout.removeAllViews();
                                             TextView textView = new TextView(getApplicationContext());
-                                            textView.setText("Sem conexão\nLigue (47)99614-3774");
+                                            textView.setText("Sem conexão\nLigue xxxx-xxxx");
                                             textView.setGravity(1);
                                             textView.setTextSize(30);
                                             textView.setTextColor(Color.WHITE);
@@ -283,11 +281,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
         actualFlag = "sleep";
         System.out.println("[KRUCEO] Minimizado, flag: " + actualFlag);
-
-
     }
-
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -331,8 +325,10 @@ public class MainActivity extends AppCompatActivity {
         if (code == 23) {
             launcherApps.get(local).performClick();
         }
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(iconWidth + 30, iconWidth + 30);
-        LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams(iconWidth, iconWidth);
+        int parsedIconWidth = pxToDIP(iconWidth,1);
+        int parsedIconSelectionWidth = pxToDIP(iconWidth, (float) 1.2);
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(parsedIconSelectionWidth, parsedIconSelectionWidth);
+        LinearLayout.LayoutParams paramsNormal = new LinearLayout.LayoutParams((int)parsedIconWidth,(int) parsedIconWidth);
         paramsNormal.setMargins(50, 10, 0, 10);
         paramsMax.setMargins(50, 10, 0, 10);
 
@@ -340,7 +336,6 @@ public class MainActivity extends AppCompatActivity {
             launcherApps.get(i).setLayoutParams(paramsNormal);
         }
         launcherApps.get(local).setLayoutParams(paramsMax);
-
 
         //---------------------------------------------------------------------------
 
@@ -353,7 +348,6 @@ public class MainActivity extends AppCompatActivity {
             codeIndex = 0;
             pastCode.clear();
         }
-
 
         if (codeIndex >= settingsCode.length) {
             System.out.println("cheat completado");
@@ -394,6 +388,11 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    public int pxToDIP(int pixels,double bias){
+        float parsedIconWidth = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, pixels, getResources().getDisplayMetrics());
+        double withBias = parsedIconWidth * bias;
+        return (int)withBias;
+    }
     public void attAppList() throws PackageManager.NameNotFoundException {
 
         System.out.println("[KRUCEO] Atualizando grade de app's ");
@@ -403,10 +402,10 @@ public class MainActivity extends AppCompatActivity {
         List<ApplicationInfo> packages = pm.getInstalledApplications(PackageManager.GET_META_DATA);
         LinearLayout layout = findViewById(R.id.principal);
         layout.removeAllViews();
-
-        float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, iconWidth, getResources().getDisplayMetrics());
-        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams((int) px * 2,(int) px * 2);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(iconWidth, iconWidth);
+        int parsedIconWidth = pxToDIP(iconWidth,1);
+        int parsedIconSelectionWidth = pxToDIP(iconWidth, (float) 1.2);
+        LinearLayout.LayoutParams paramsMax = new LinearLayout.LayoutParams(parsedIconSelectionWidth,parsedIconSelectionWidth);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams((int)parsedIconWidth,(int)parsedIconWidth);
         params.setMargins(50, 10, 0, 10);
         paramsMax.setMargins(50, 10, 0, 10);
 
@@ -430,12 +429,10 @@ public class MainActivity extends AppCompatActivity {
                     newImage.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
-
-
                             Intent launchIntent = getPackageManager().getLaunchIntentForPackage(packageInfo.packageName);
                             if (launchIntent != null) {
                                 startActivity(launchIntent);
-                                System.out.println("%%%%%%%%%%%%%%%%%%%%" + packageInfo.packageName);
+//                                System.out.println("%%%%%%%%%%%%%%%%%%%%" + packageInfo.packageName);
                                 System.out.println("[KRUCEO] Iniciando" + launchIntent.getPackage());
                             }
                         }
@@ -451,9 +448,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             System.out.println("[BAD]nenhum app dos listados encontrado, por favor reinicie o dispositivo e aceite todos os requerimentos");
         }
-
     }
-
     public String getVersion(String packageName) {
         String versionName = "";
         try {
@@ -472,13 +467,14 @@ public class MainActivity extends AppCompatActivity {
         Thread wallpaperThread = new Thread() {
             @RequiresApi(api = Build.VERSION_CODES.N)
             public void run() {
-                File wallpaperImage = new File(getApplicationContext().getFilesDir().getPath() + "/wallpaper2.png");
+                File wallpaperImage = new File(getApplicationContext().getFilesDir().getPath() + "/wallpaper.png");
+                System.out.println(wallpaperImage.getAbsolutePath());
                 if(wallpaperImage.exists()){
                     System.out.println(wallpaperImage.delete());
                 }
                 Boolean download = false;
                 try {
-                    download = new KruceoLib().downloadFrom(baseLink+"/wallpaper.png", wallpaperImage);
+                    download = new KruceoLib().downloadFrom(wallpaperLink, wallpaperImage);
                 } catch (IOException e) {
                 }
                 while (!download) {
@@ -487,11 +483,9 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.runOnUiThread(new Runnable() {
 
                     public void run() {
-
                         actualFlag = "getting wallpaper";
 
-
-                        Drawable drawable = Drawable.createFromPath(getApplicationContext().getFilesDir().getPath() + "/wallpaper2.png");
+                        Drawable drawable = Drawable.createFromPath(getApplicationContext().getFilesDir().getPath() + "/wallpaper.png");
 
                         getWindow().setBackgroundDrawable(drawable);
                         donwloading = false;
@@ -533,13 +527,11 @@ public class MainActivity extends AppCompatActivity {
     private boolean haveServerConnection() {
         Boolean check = false;
         try {
-
             String req = new KruceoLib().getRequest(checkLink);
             check = req.contains("connection");
-            System.out.println(new KruceoLib().getRequest(checkLink) + "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEU BOA" + check);
+
         } catch (Error e) {
             check = false;
-            System.out.println("DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDEU RUIM");
         }
 
         Boolean finalCheck = check;
@@ -547,11 +539,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 ImageView serverIcon = findViewById(R.id.server);
-                System.out.println("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF" + finalCheck);
                 if (finalCheck) {
-                    System.out.println("RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR");
                     serverIcon.setColorFilter(Color.GREEN);
-                    System.out.println("RRRRRRRWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");
                 } else {
                     serverIcon.setColorFilter(Color.RED);
                 }
